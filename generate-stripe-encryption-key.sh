@@ -6,6 +6,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 [ -f .env ] && set -a && source .env && set +a
-IMAGE="ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-api:latest"
+IMAGE="ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-api:${COGENTO_IMAGE_TAG:-latest}"
 echo "Pulling image (if needed) and generating key..."
 docker run --rm "$IMAGE" python generate_key.py

@@ -101,4 +101,4 @@ By default, data is stored under `./volumes/` (or `COGENTO_DATA_ROOT` from `.env
 
 ## Images
 
-Images are pulled from **GitHub Container Registry** (`ghcr.io/<GHCR_OWNER>/cogento-api`, `cogento-ui`). Set `GHCR_OWNER` in `.env` to your GitHub user or org (default: `stefano-edgible`).
+Images are pulled from **GitHub Container Registry** (`ghcr.io/<GHCR_OWNER>/cogento-api`, `cogento-ui`). Set `GHCR_OWNER` in `.env` to your GitHub user or org (default: `stefano-edgible`). Default tag is **`latest`** (linux/amd64, e.g. EC2). On **Apple Silicon (M1/M2/M3)** set **`COGENTO_IMAGE_TAG=latest-arm64`** in `.env` and build those images first from the Cogento repo with `DOCKER_PLATFORM=linux/arm64` (see Cogento registry README).

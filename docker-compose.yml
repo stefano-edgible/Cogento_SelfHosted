@@ -74,7 +74,7 @@ services:
       - with-pgadmin
 
   api:
-    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-api:latest
+    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-api:${COGENTO_IMAGE_TAG:-latest}
     container_name: cogento-api
     restart: unless-stopped
     environment:
@@ -128,7 +128,7 @@ services:
       start_period: 40s
 
   ui:
-    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-ui:latest
+    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-ui:${COGENTO_IMAGE_TAG:-latest}
     container_name: cogento-ui
     restart: unless-stopped
     ports:
