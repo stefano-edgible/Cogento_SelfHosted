@@ -61,7 +61,7 @@ Copy `.env.example` to `.env` and set at least the following.
 **Optional (only if you use that feature)**
 
 - **Mail (login emails):** `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` (SMTP), or **`RESEND_API_KEY`** (Resend). Plus `MAIL_FROM` / `MAIL_FROM_NAME` if needed.
-- **Multi-tenant Stripe:** **`STRIPE_KEY_ENCRYPTION_KEY`** – Used to encrypt tenant Stripe keys in the DB. Use a long random secret (e.g. 32+ bytes).
+- **Multi-tenant Stripe:** **`STRIPE_KEY_ENCRYPTION_KEY`** – Used to encrypt tenant Stripe keys in the DB. It must be a **Fernet** key (not a random typed string). Run `./generate-stripe-encryption-key.sh` to generate one, then add the printed line to `.env`.
 - **Cloudflare Turnstile:** **`TURNSTILE_SITE_KEY`** and **`TURNSTILE_SECRET_KEY`** – Only if you enable Turnstile in the app.
 
 **Not secrets (but useful)**
@@ -84,6 +84,7 @@ Keep `.env` out of version control (it is in `.gitignore`).
 | `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
+| `generate-stripe-encryption-key.sh` | Generate a Fernet key for `STRIPE_KEY_ENCRYPTION_KEY` (for multi-tenant Stripe). Add the printed line to `.env`. |
 | `sync-from-cogento.sh` | **Maintainers:** copy config/migrations from the [Cogento](https://github.com/stefano-edgible/Cogento) repo (source of truth). Run when those files change in Cogento, then commit. Default source: `../Cogento`; override with `COGENTO_SOURCE=/path/to/Cogento`. |
 
 ## Ports
