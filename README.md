@@ -73,7 +73,7 @@ Keep `.env` out of version control (it is in `.gitignore`).
 
 **Changing passwords after launch**
 
-- **PostgreSQL:** Yes. Connect to the database (e.g. with pgAdmin or `psql`), change the `cogento` user password (e.g. `ALTER USER cogento PASSWORD 'newpassword';`), then update `POSTGRES_PASSWORD` in `.env` and restart the API so it uses the new password: `docker compose -p cogento restart api`.
+- **PostgreSQL:** Yes. In pgAdmin: connect to the "Cogento PostgreSQL" server (use the password from your `.env`), right-click the **postgres** database → **Query Tool**, run `ALTER USER cogento PASSWORD 'your_new_password';`, then update `POSTGRES_PASSWORD` in `.env` to the same value and run `docker compose -p cogento restart api`.
 - **pgAdmin:** Yes. Either change your password from inside the pgAdmin web UI (login → right-click your user → Change Password), or set a new default by updating `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` in `.env`, removing the pgAdmin data volume (`rm -rf ./volumes/pgadmin/data`), running `sudo ./setup-volumes.sh` again, and starting with `./start-with-pgadmin.sh` (pgAdmin will re-initialize with the new credentials).
 
 ## Scripts
