@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Cogento PostgreSQL",
+      "Group": "Servers",
+      "Host": "cogento-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "cogento",
+      "SSLMode": "prefer"
+    }
+  }
+}

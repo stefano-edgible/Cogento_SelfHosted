@@ -1,0 +1,177 @@
+# Cogento Self-Hosted – run from pre-built registry images (no build)
+#
+# 1. Copy .env.example to .env and set GHCR_OWNER (and POSTGRES_PASSWORD, etc.).
+# 2. Run: ./setup-volumes.sh && ./start.sh
+#
+# Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
+#
+# Data: set COGENTO_DATA_ROOT in .env to persist data outside the repo (e.g. /data).
+
+name: cogento
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cogento-postgres
+    restart: unless-stopped
+    command:
+      - postgres
+      - "-c"
+      - "shared_buffers=64MB"
+      - "-c"
+      - "work_mem=1MB"
+      - "-c"
+      - "max_connections=40"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cogento}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+      SHARED_SUPERUSER_EMAIL: ${SHARED_SUPERUSER_EMAIL:-}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ${COGENTO_DATA_ROOT:-.}/volumes/postgres/data:/var/lib/postgresql/data
+      - ./scripts/db/bootstrap_shared_db.sh:/docker-entrypoint-initdb.d/00_bootstrap_shared_db.sh:ro
+      - ./api/migrations/bootstrap_shared_schema.sql:/docker-entrypoint-initdb.d/bootstrap_shared_schema.sql:ro
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cogento} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cogento-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cogento-pgadmin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: "5050:5050"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@cogento.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
+    ports:
+      - "0.0.0.0:${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - ${COGENTO_DATA_ROOT:-.}/volumes/pgadmin/data:/var/lib/pgadmin
+      - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - cogento-network
+    profiles:
+      - with-pgadmin
+
+  api:
+    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-api:latest
+    container_name: cogento-api
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: cogento-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-cogento}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      STRIPE_KEY_ENCRYPTION_KEY: ${STRIPE_KEY_ENCRYPTION_KEY:-}
+      DONATE_TENANT_ID: ${DONATE_TENANT_ID:-donate}
+      API_PORT: 8000
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@cogento.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Cogento}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SERVER: ${MAIL_SERVER:-smtp.gmail.com}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SHARED_SUPERUSER_EMAIL: ${SHARED_SUPERUSER_EMAIL:-}
+      UI_BASE_URL: ${UI_BASE_URL:-http://localhost:3000}
+      PROGENTO_API_URL: ${PROGENTO_API_URL:-http://172.17.0.1:8001}
+      PROGENTO_COGENTO_KB_REPO_ID: ${PROGENTO_COGENTO_KB_REPO_ID:-cogento}
+      PROGENTO_HELP_CHAT_MODEL: ${PROGENTO_HELP_CHAT_MODEL:-phi}
+      PROGENTO_HELP_CHAT_TOP_K: ${PROGENTO_HELP_CHAT_TOP_K:-1}
+      PROGENTO_DOCS_KB_REPO_ID: ${PROGENTO_DOCS_KB_REPO_ID:-}
+      PROGENTO_DOCS_MODEL: ${PROGENTO_DOCS_MODEL:-}
+      PROGENTO_TECHNICAL_KB_REPO_ID: ${PROGENTO_TECHNICAL_KB_REPO_ID:-}
+      PROGENTO_TECHNICAL_MODEL: ${PROGENTO_TECHNICAL_MODEL:-phi}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ${COGENTO_DATA_ROOT:-.}/volumes/tenant:/volumes/tenant
+      - ./imports:/app/imports
+      - ./tools:/app/tools
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cogento-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  ui:
+    image: ghcr.io/${GHCR_OWNER:-stefano-edgible}/cogento-ui:latest
+    container_name: cogento-ui
+    restart: unless-stopped
+    ports:
+      - "${UI_PORT:-3000}:${UI_CONTAINER_PORT:-80}"
+    environment:
+      - VITE_API_URL=http://cogento-api:8000
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    depends_on:
+      - api
+    networks:
+      - cogento-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${UI_CONTAINER_PORT:-80}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    image: nginx:alpine
+    container_name: cogento-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+    volumes:
+      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      ui:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    networks:
+      - cogento-network
+
+networks:
+  cogento-network:
+    name: cogento-network
+    driver: bridge
