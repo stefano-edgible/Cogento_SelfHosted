@@ -28,7 +28,6 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 3. **Create volume dirs and start**
    ```bash
-   chmod +x *.sh
    ./setup-volumes.sh          # on Linux, use sudo ./setup-volumes.sh if you will use pgAdmin
    ./start.sh
    ```
