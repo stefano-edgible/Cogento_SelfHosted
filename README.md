@@ -33,7 +33,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
    ./start.sh
    ```
 
-4. **Open the app** at **http://localhost:80** (nginx) or **http://localhost:3000** (UI direct).
+4. **Open the app** at **http://localhost:80** (nginx) or **http://localhost:3000** (UI direct). The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
 
 **Optional: pgAdmin**
 
