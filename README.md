@@ -44,6 +44,33 @@ On Linux, run `sudo ./setup-volumes.sh` first so the pgAdmin data dir has the co
 # Then open http://localhost:5050 (or PGADMIN_PORT from .env)
 ```
 
+## Secrets and keys
+
+Copy `.env.example` to `.env` and set at least the following.
+
+**Must set before first run**
+
+- **`POSTGRES_PASSWORD`** – Database password (default `changeme` is insecure). Pick a strong value and keep it secret.
+- **`GHCR_OWNER`** – Your GitHub user or org name (for pulling images from `ghcr.io`). Not a secret, but required.
+
+**Should set for production or if using the feature**
+
+- **`PGADMIN_EMAIL`** / **`PGADMIN_PASSWORD`** – Only if you start pgAdmin (`start-with-pgadmin.sh`). Defaults are weak; change them if pgAdmin is reachable.
+- **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap script). Optional; set if you want an initial admin.
+
+**Optional (only if you use that feature)**
+
+- **Mail (login emails):** `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` (SMTP), or **`RESEND_API_KEY`** (Resend). Plus `MAIL_FROM` / `MAIL_FROM_NAME` if needed.
+- **Multi-tenant Stripe:** **`STRIPE_KEY_ENCRYPTION_KEY`** – Used to encrypt tenant Stripe keys in the DB. Use a long random secret (e.g. 32+ bytes).
+- **Cloudflare Turnstile:** **`TURNSTILE_SITE_KEY`** and **`TURNSTILE_SECRET_KEY`** – Only if you enable Turnstile in the app.
+
+**Not secrets (but useful)**
+
+- **`UI_BASE_URL`** – Base URL of the app (e.g. `https://cogento.example.com`) for links in emails. Default `http://localhost:3000`.
+- **`COGENTO_DATA_ROOT`** – Where to store volumes; use a dedicated path (e.g. `/data`) on a server.
+
+Keep `.env` out of version control (it is in `.gitignore`).
+
 ## Scripts
 
 | Script | Description |
