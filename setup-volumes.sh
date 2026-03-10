@@ -8,10 +8,14 @@ cd "$SCRIPT_DIR"
 ROOT="${COGENTO_DATA_ROOT:-.}"
 echo "Creating volumes under ${ROOT}/volumes/..."
 mkdir -p "${ROOT}/volumes/postgres/data"
-mkdir -p "${ROOT}/volumes/pgadmin/data"
+mkdir -p "${ROOT}/volumes/pgadmin/data/sessions"
 mkdir -p "${ROOT}/volumes/tenant"
-# pgAdmin writes as UID 5050
+# pgAdmin (dpage/pgadmin4) runs as user pgadmin (UID 5050) and needs to write to /var/lib/pgadmin/sessions
 if command -v chown &>/dev/null; then
-  chown 5050:5050 "${ROOT}/volumes/pgadmin/data" 2>/dev/null || true
+  if chown -R 5050:5050 "${ROOT}/volumes/pgadmin/data" 2>/dev/null; then
+    echo "pgAdmin data dir owned by 5050:5050."
+  else
+    echo "Warning: could not chown pgAdmin data to 5050:5050 (run with sudo on Linux if pgAdmin fails to start)."
+  fi
 fi
 echo "Done."

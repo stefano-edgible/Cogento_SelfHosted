@@ -38,6 +38,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 **Optional: pgAdmin**
 
 ```bash
+./setup-volumes.sh   # on Linux, run with sudo if pgAdmin later fails with "Permission denied" on sessions
 ./start-with-pgadmin.sh
 # Then open http://localhost:5050 (or PGADMIN_PORT from .env)
 ```
@@ -46,7 +47,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 | Script | Description |
 |--------|-------------|
-| `setup-volumes.sh` | Create volume directories and set pgAdmin data dir ownership (run once or when changing data root) |
+| `setup-volumes.sh` | Create volume directories (run once or when changing data root) |
 | `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
