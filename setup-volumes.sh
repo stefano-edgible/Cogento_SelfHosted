@@ -13,10 +13,10 @@ mkdir -p "${ROOT}/volumes/pgadmin/data/storage"
 mkdir -p "${ROOT}/volumes/tenant"
 # postgres:15-alpine runs as postgres (UID 70) and must create pgdata inside the mount
 if command -v chown &>/dev/null; then
-  if chown 70:70 "${ROOT}/volumes/postgres/data" 2>/dev/null; then
+  if chown -R 70:70 "${ROOT}/volumes/postgres/data" 2>/dev/null; then
     echo "Postgres data dir owned by 70:70."
   else
-    echo "Warning: could not chown Postgres data to 70:70 (run with sudo on Linux if Postgres fails to start)."
+    echo "Warning: could not chown Postgres data to 70:70 (run with sudo on Linux: sudo chown -R 70:70 ${ROOT}/volumes/postgres/data)."
   fi
 fi
 # pgAdmin (dpage/pgadmin4) runs as user pgadmin (UID 5050)

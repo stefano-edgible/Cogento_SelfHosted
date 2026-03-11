@@ -94,6 +94,15 @@ Keep `.env` out of version control (it is in `.gitignore`).
 - **5432** – Postgres (host)
 - **5050** – pgAdmin (only when started with `start-with-pgadmin.sh`)
 
+## Troubleshooting
+
+**Postgres: "Permission denied" creating `/var/lib/postgresql/data/pgdata`**  
+The postgres container runs as UID 70. From the Cogento_SelfHosted directory run:
+```bash
+sudo chown -R 70:70 ./volumes/postgres/data
+```
+If you set `COGENTO_DATA_ROOT` in `.env`, use that path instead: `sudo chown -R 70:70 "${COGENTO_DATA_ROOT}/volumes/postgres/data"`. Then `docker compose -p cogento down` and `./start.sh` again.
+
 ## Data
 
 By default, data is stored under `./volumes/` (or `COGENTO_DATA_ROOT` from `.env`). Use a dedicated path (e.g. `/data`) on a server with a data disk.
