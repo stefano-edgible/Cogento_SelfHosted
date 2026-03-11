@@ -6,6 +6,8 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 - **Docker** and **Docker Compose** (v2)
 
+**Platforms:** The same setup works on **Linux** (e.g. EC2) and **macOS** (Docker Desktop). On Linux, `sudo ./setup-volumes.sh` sets correct ownership for the bind-mounted data dirs; on macOS a postgres entrypoint wrapper fixes permissions inside the container. No platform-specific steps.
+
 **Suggested minimum hardware**
 
 - **RAM:** 2 GB minimum; **4 GB** recommended (Postgres, API, UI; optional pgAdmin).
