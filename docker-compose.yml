@@ -1,11 +1,11 @@
 # Cogento Self-Hosted – run from pre-built registry images (no build)
 #
 # 1. Copy .env.example to .env and set GHCR_OWNER (and POSTGRES_PASSWORD, etc.).
-# 2. Run: ./setup-volumes.sh && ./start.sh
+# 2. Run: ./setup-volumes.sh (sudo on Linux) && ./start.sh
 #
 # Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
 #
-# Data: Postgres uses a Docker named volume. Access the app at http://host:3000 (UI). pgAdmin and tenant data use COGENTO_DATA_ROOT.
+# Data: All under ${COGENTO_DATA_ROOT:-.}/volumes/ (postgres, pgadmin, tenant). One place to reset: stop, rm -rf volumes, ./setup-volumes.sh, ./start.sh
 
 name: cogento
 
@@ -31,7 +31,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - cogento_postgres_data:/var/lib/postgresql/data
+      - ${COGENTO_DATA_ROOT:-.}/volumes/postgres:/var/lib/postgresql/data
       - ./scripts/db/bootstrap_shared_db.sh:/docker-entrypoint-initdb.d/00_bootstrap_shared_db.sh:ro
       - ./api/migrations/bootstrap_shared_schema.sql:/docker-entrypoint-initdb.d/bootstrap_shared_schema.sql:ro
     deploy:
@@ -62,7 +62,7 @@ services:
     ports:
       - "0.0.0.0:${PGADMIN_PORT:-5050}:80"
     volumes:
-      - cogento_pgadmin_data:/var/lib/pgadmin
+      - ${COGENTO_DATA_ROOT:-.}/volumes/pgadmin:/var/lib/pgadmin
       - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
     deploy:
       resources:
@@ -148,10 +148,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-volumes:
-  cogento_postgres_data:
-  cogento_pgadmin_data:
 
 networks:
   cogento-network:

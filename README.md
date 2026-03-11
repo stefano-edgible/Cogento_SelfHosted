@@ -28,7 +28,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 3. **Create volume dirs and start**
    ```bash
-   ./setup-volumes.sh
+   ./setup-volumes.sh          # on Linux: sudo ./setup-volumes.sh
    ./start.sh
    ```
 
@@ -49,7 +49,7 @@ Copy `.env.example` to `.env` and set at least the following.
 
 - **`POSTGRES_PASSWORD`** – Database password (default `changeme` is insecure). Pick a strong value and keep it secret.
 - **`GHCR_OWNER`** – Your GitHub user or org name (for pulling images from `ghcr.io`). Not a secret, but required.
-- **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap). **Set before first `./start.sh`** if you want to log in as shared admin (Tenants/Users); bootstrap runs only on first Postgres init. If you skip it, you can add a superuser later via SQL (e.g. in pgAdmin) against `cogento_shared.users`.
+- **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap). **Set before first `./start.sh`** if you want to log in as shared admin (Tenants/Users); bootstrap runs only on first Postgres init. If you already started without it, run `./scripts/db/add_shared_superuser.sh` (stack must be running) or add the user via SQL against `cogento_shared.users`.
 
 **Should set for production or if using the feature**
 
@@ -68,16 +68,37 @@ Copy `.env.example` to `.env` and set at least the following.
 
 Keep `.env` out of version control (it is in `.gitignore`).
 
+**Forgot to set SHARED_SUPERUSER_EMAIL before first start?**
+
+If you see "Email does not exist as superuser in shared database" at `/shared/signin`, the bootstrap already ran without that email. Either:
+
+**Option A – Add the superuser to the existing DB:** Set `SHARED_SUPERUSER_EMAIL` in `.env`, then run:
+
+```bash
+./scripts/db/add_shared_superuser.sh
+```
+
+(Stack must be running.) Alternatively, in pgAdmin connect to **Cogento PostgreSQL** → database **cogento_shared** → Query Tool, run (replace with your email):
+
+```sql
+INSERT INTO users (user_id, email, role, is_active, created_at, updated_at)
+VALUES (gen_random_uuid(), 'your@email.com', 'superuser', TRUE, NOW(), NOW())
+ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_at = NOW();
+```
+
+**Option B – Full reset (re-run bootstrap):** All data lives under `./volumes/`. To start completely fresh: `docker compose -p cogento down`, then `rm -rf volumes`, then `./setup-volumes.sh` (with `sudo` on Linux if needed), then `./start.sh`. Set `SHARED_SUPERUSER_EMAIL` in `.env` before `./start.sh`.
+
 **Changing passwords after launch**
 
 - **PostgreSQL:** Yes. In pgAdmin: connect to the "Cogento PostgreSQL" server (use the password from your `.env`), right-click the **postgres** database → **Query Tool**, run `ALTER USER cogento PASSWORD 'your_new_password';`, then update `POSTGRES_PASSWORD` in `.env` to the same value and run `docker compose -p cogento restart api`.
-- **pgAdmin:** Yes. Either change your password from inside the pgAdmin web UI (login → right-click your user → Change Password), or set a new default by updating `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` in `.env`, removing the pgAdmin volume (`docker volume rm cogento_cogento_pgadmin_data`), and running `./start-with-pgadmin.sh` again (pgAdmin will re-initialize with the new credentials).
+- **pgAdmin:** Yes. Either change your password from inside the pgAdmin web UI (login → right-click your user → Change Password), or set a new default in `.env`, then `rm -rf volumes/pgadmin`, run `./setup-volumes.sh` again (with `sudo` on Linux if needed), and `./start-with-pgadmin.sh`.
 
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `setup-volumes.sh` | Create volume directories for tenant data (run once or when changing data root). Postgres and pgAdmin use Docker named volumes. |
+| `setup-volumes.sh` | Create `volumes/postgres`, `volumes/pgadmin`, `volumes/tenant`. Run once or after a full reset. On Linux run with `sudo` so containers can write. |
+| `scripts/db/add_shared_superuser.sh` | Add shared superuser to `cogento_shared.users` (e.g. if you started without `SHARED_SUPERUSER_EMAIL`). Run from repo root; stack must be up. |
 | `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
@@ -93,7 +114,7 @@ Keep `.env` out of version control (it is in `.gitignore`).
 
 ## Data
 
-Postgres and pgAdmin use **Docker named volumes** (`cogento_postgres_data`, `cogento_pgadmin_data`), so no host path or permissions setup is needed. Tenant data is under `./volumes/tenant` (or `COGENTO_DATA_ROOT` from `.env`).
+**All data lives under one directory:** `./volumes/` (or `COGENTO_DATA_ROOT/volumes/` from `.env`). Subdirs: `postgres`, `pgadmin`, `tenant`. To reset everything: stop the stack, `rm -rf volumes`, run `./setup-volumes.sh` (with `sudo` on Linux), then `./start.sh`. On Linux, `./setup-volumes.sh` must be run with `sudo` so the postgres and pgAdmin containers can write to their dirs.
 
 ## Images
 
