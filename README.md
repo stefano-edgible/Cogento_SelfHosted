@@ -32,7 +32,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
    ./start.sh
    ```
 
-4. **Open the app** at **http://localhost:80** (nginx) or **http://localhost:3000** (UI direct). The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
+4. **Open the app** at **http://localhost:8080** (nginx) or **http://localhost:3000** (UI direct). The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
 
 **Optional: pgAdmin**
 
@@ -88,7 +88,7 @@ Keep `.env` out of version control (it is in `.gitignore`).
 
 ## Ports
 
-- **80** – nginx (default HTTP)
+- **8080** – nginx (default HTTP)
 - **3000** – UI (direct)
 - **8000** – API (direct)
 - **5432** – Postgres (host)
