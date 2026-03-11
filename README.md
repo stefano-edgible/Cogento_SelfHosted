@@ -23,7 +23,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 2. **Create `.env`**
    ```bash
    cp .env.example .env
-   # Edit .env if needed (e.g. COGENTO_DATA_ROOT=/data, POSTGRES_PASSWORD, GHCR_OWNER)
+   # Edit .env before first start: set POSTGRES_PASSWORD, GHCR_OWNER, and (for an initial shared-database admin) SHARED_SUPERUSER_EMAIL. Bootstrap runs only on first Postgres init.
    ```
 
 3. **Create volume dirs and start**
@@ -49,11 +49,11 @@ Copy `.env.example` to `.env` and set at least the following.
 
 - **`POSTGRES_PASSWORD`** – Database password (default `changeme` is insecure). Pick a strong value and keep it secret.
 - **`GHCR_OWNER`** – Your GitHub user or org name (for pulling images from `ghcr.io`). Not a secret, but required.
+- **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap). **Set before first `./start.sh`** if you want to log in as shared admin (Tenants/Users); bootstrap runs only on first Postgres init. If you skip it, you can add a superuser later via SQL (e.g. in pgAdmin) against `cogento_shared.users`.
 
 **Should set for production or if using the feature**
 
 - **`PGADMIN_EMAIL`** / **`PGADMIN_PASSWORD`** – Only if you start pgAdmin (`start-with-pgadmin.sh`). Defaults are weak; change them if pgAdmin is reachable.
-- **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap script). Optional; set if you want an initial admin.
 
 **Optional (only if you use that feature)**
 
