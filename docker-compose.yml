@@ -5,7 +5,7 @@
 #
 # Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
 #
-# Data: set COGENTO_DATA_ROOT in .env to persist data outside the repo (e.g. /data).
+# Data: Postgres uses a Docker named volume (no host path). pgAdmin and tenant data use COGENTO_DATA_ROOT.
 
 name: cogento
 
@@ -31,7 +31,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - ${COGENTO_DATA_ROOT:-.}/volumes/postgres/data:/var/lib/postgresql/data
+      - cogento_postgres_data:/var/lib/postgresql/data
       - ./scripts/db/bootstrap_shared_db.sh:/docker-entrypoint-initdb.d/00_bootstrap_shared_db.sh:ro
       - ./api/migrations/bootstrap_shared_schema.sql:/docker-entrypoint-initdb.d/bootstrap_shared_schema.sql:ro
     deploy:
@@ -168,6 +168,9 @@ services:
           memory: 64M
     networks:
       - cogento-network
+
+volumes:
+  cogento_postgres_data:
 
 networks:
   cogento-network:

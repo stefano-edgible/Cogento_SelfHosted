@@ -28,7 +28,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 3. **Create volume dirs and start**
    ```bash
-   ./setup-volumes.sh          # on Linux, use sudo ./setup-volumes.sh so Postgres and pgAdmin dirs have correct ownership
+   ./setup-volumes.sh          # on Linux, use sudo ./setup-volumes.sh if you use pgAdmin
    ./start.sh
    ```
 
@@ -36,7 +36,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 **Optional: pgAdmin**
 
-On Linux, run `sudo ./setup-volumes.sh` first so Postgres (UID 70) and pgAdmin (UID 5050) data dirs have the correct ownership. Then:
+On Linux, run `sudo ./setup-volumes.sh` first so the pgAdmin data dir has the correct ownership (UID 5050). Then:
 
 ```bash
 ./start-with-pgadmin.sh
@@ -79,7 +79,7 @@ Keep `.env` out of version control (it is in `.gitignore`).
 
 | Script | Description |
 |--------|-------------|
-| `setup-volumes.sh` | Create volume directories (run once or when changing data root). On Linux, use `sudo ./setup-volumes.sh` so Postgres and pgAdmin can write to their volumes. |
+| `setup-volumes.sh` | Create volume directories (run once or when changing data root). On Linux, use `sudo ./setup-volumes.sh` if you use pgAdmin. |
 | `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
@@ -94,18 +94,9 @@ Keep `.env` out of version control (it is in `.gitignore`).
 - **5432** – Postgres (host)
 - **5050** – pgAdmin (only when started with `start-with-pgadmin.sh`)
 
-## Troubleshooting
-
-**Postgres: "Permission denied" creating `/var/lib/postgresql/data/pgdata`**  
-The postgres container runs as UID 70. From the Cogento_SelfHosted directory run:
-```bash
-sudo chown -R 70:70 ./volumes/postgres/data
-```
-If you set `COGENTO_DATA_ROOT` in `.env`, use that path instead: `sudo chown -R 70:70 "${COGENTO_DATA_ROOT}/volumes/postgres/data"`. Then `docker compose -p cogento down` and `./start.sh` again.
-
 ## Data
 
-By default, data is stored under `./volumes/` (or `COGENTO_DATA_ROOT` from `.env`). Use a dedicated path (e.g. `/data`) on a server with a data disk.
+Postgres data is stored in a **Docker named volume** (`cogento_postgres_data`), so no host path or permissions setup is needed. Other data (pgAdmin, tenant) is under `./volumes/` (or `COGENTO_DATA_ROOT` from `.env`). To put Postgres on a specific disk, see Docker docs for creating a volume with a custom path.
 
 ## Images
 
