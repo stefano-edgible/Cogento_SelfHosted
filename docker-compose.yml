@@ -14,6 +14,7 @@ services:
     image: postgres:15-alpine
     container_name: cogento-postgres
     restart: unless-stopped
+    entrypoint: ["/usr/local/bin/postgres-entrypoint-wrapper.sh"]
     command:
       - postgres
       - "-c"
@@ -32,6 +33,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - ${COGENTO_DATA_ROOT:-.}/volumes/postgres:/var/lib/postgresql/data
+      - ./scripts/db/postgres-entrypoint-wrapper.sh:/usr/local/bin/postgres-entrypoint-wrapper.sh:ro
       - ./scripts/db/bootstrap_shared_db.sh:/docker-entrypoint-initdb.d/00_bootstrap_shared_db.sh:ro
       - ./api/migrations/bootstrap_shared_schema.sql:/docker-entrypoint-initdb.d/bootstrap_shared_schema.sql:ro
     deploy:
