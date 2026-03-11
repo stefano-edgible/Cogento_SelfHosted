@@ -68,6 +68,8 @@ Copy `.env.example` to `.env` and set at least the following.
 - **`UI_BASE_URL`** – Base URL of the app (e.g. `https://cogento.example.com`) for links in emails. Default `http://localhost:3000`.
 - **`COGENTO_DATA_ROOT`** – Where to store volumes; use a dedicated path (e.g. `/data`) on a server.
 
+**Using an external mount (e.g. EC2 `/data`):** Set `COGENTO_DATA_ROOT=/data` in `.env`. Run `sudo ./setup-volumes.sh` from the repo (it creates `/data/volumes/postgres`, `pgadmin`, `tenant` and sets ownership). Then `./start.sh` as usual. Compose and the setup script both use the same variable, so everything stays under one path; no extra steps.
+
 Keep `.env` out of version control (it is in `.gitignore`).
 
 **Forgot to set SHARED_SUPERUSER_EMAIL before first start?**
@@ -88,7 +90,7 @@ VALUES (gen_random_uuid(), 'your@email.com', 'superuser', TRUE, NOW(), NOW())
 ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_at = NOW();
 ```
 
-**Option B – Full reset (re-run bootstrap):** All data lives under `./volumes/`. To start completely fresh: `docker compose -p cogento down`, then `rm -rf volumes`, then `sudo ./setup-volumes.sh`, then `./start.sh`. Set `SHARED_SUPERUSER_EMAIL` in `.env` before `./start.sh`.
+**Option B – Full reset (re-run bootstrap):** All data lives under `./volumes/` (or `$COGENTO_DATA_ROOT/volumes/`). To start completely fresh: `docker compose -p cogento down`, then `rm -rf volumes` (or `rm -rf $COGENTO_DATA_ROOT/volumes` if using an external path), then `sudo ./setup-volumes.sh`, then `./start.sh`. Set `SHARED_SUPERUSER_EMAIL` in `.env` before `./start.sh`.
 
 **Changing passwords after launch**
 
@@ -116,7 +118,11 @@ ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_
 
 ## Data
 
-**All data lives under one directory:** `./volumes/` (or `COGENTO_DATA_ROOT/volumes/` from `.env`). Subdirs: `postgres`, `pgadmin`, `tenant`. To reset everything: stop the stack, `rm -rf volumes`, run `sudo ./setup-volumes.sh`, then `./start.sh`. Run `./setup-volumes.sh` with `sudo` so the postgres (UID 70) and pgAdmin (UID 5050) containers can write to their dirs.
+**All data lives under one directory:** `./volumes/` (or `COGENTO_DATA_ROOT/volumes/` if you set e.g. `COGENTO_DATA_ROOT=/data`). Subdirs: `postgres`, `pgadmin`, `tenant`. Run `./setup-volumes.sh` with `sudo` so the postgres (UID 70) and pgAdmin (UID 5050) containers can write to their dirs.
+
+**Why use an external mount (e.g. `/data` on EC2)?** Putting data on a dedicated path (set `COGENTO_DATA_ROOT=/data` in `.env`) makes it easy to reinstall the OS or move to a different instance: keep or reattach the same volume, point `.env` at it, and run `sudo ./setup-volumes.sh` and `./start.sh` again. All state stays in one place and is independent of the repo or runtime install.
+
+**Reset everything from scratch:** To wipe all data and get a fresh Postgres (and pgAdmin state): stop the stack (`docker compose -p cogento down`), delete the data dir (`rm -rf volumes` or `rm -rf $COGENTO_DATA_ROOT/volumes` if using an external path), run `sudo ./setup-volumes.sh`, then `./start.sh`. Postgres will run its bootstrap again (including creating the shared superuser if `SHARED_SUPERUSER_EMAIL` is set in `.env`). No Docker volumes to remove—everything is under that one directory.
 
 ## Images
 
