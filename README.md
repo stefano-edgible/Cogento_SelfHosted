@@ -23,7 +23,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 2. **Create `.env`**
    ```bash
    cp .env.example .env
-   # Edit .env before first start: set POSTGRES_PASSWORD, GHCR_OWNER, and (for an initial shared-database admin) SHARED_SUPERUSER_EMAIL. Bootstrap runs only on first Postgres init.
+   # Edit .env before first start: POSTGRES_PASSWORD, GHCR_OWNER, SHARED_SUPERUSER_EMAIL (for shared admin), and mail (SMTP or RESEND_API_KEY) so login codes can be sent.
    ```
 
 3. **Create volume dirs and start**
@@ -50,6 +50,7 @@ Copy `.env.example` to `.env` and set at least the following.
 - **`POSTGRES_PASSWORD`** – Database password (default `changeme` is insecure). Pick a strong value and keep it secret.
 - **`GHCR_OWNER`** – Your GitHub user or org name (for pulling images from `ghcr.io`). Not a secret, but required.
 - **`SHARED_SUPERUSER_EMAIL`** – Email of the first shared superuser (created by the DB bootstrap). **Set before first `./start.sh`** if you want to log in as shared admin (Tenants/Users); bootstrap runs only on first Postgres init. If you already started without it, run `./scripts/db/add_shared_superuser.sh` (stack must be running) or add the user via SQL against `cogento_shared.users`.
+- **Mail (required for login):** Login is by email code (PIN). Without mail configured, no one can sign in (shared superuser or tenant users). Set either **SMTP** (`MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`) or **`RESEND_API_KEY`** (Resend). Plus `MAIL_FROM` / `MAIL_FROM_NAME` if needed.
 
 **Should set for production or if using the feature**
 
@@ -57,7 +58,6 @@ Copy `.env.example` to `.env` and set at least the following.
 
 **Optional (only if you use that feature)**
 
-- **Mail (login emails):** `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` (SMTP), or **`RESEND_API_KEY`** (Resend). Plus `MAIL_FROM` / `MAIL_FROM_NAME` if needed.
 - **Multi-tenant Stripe:** **`STRIPE_KEY_ENCRYPTION_KEY`** – Used to encrypt tenant Stripe keys in the DB. It must be a **Fernet** key (not a random typed string). Run `./generate-stripe-encryption-key.sh` to generate one, then add the printed line to `.env`.
 - **Cloudflare Turnstile:** **`TURNSTILE_SITE_KEY`** and **`TURNSTILE_SECRET_KEY`** – Only if you enable Turnstile in the app.
 
