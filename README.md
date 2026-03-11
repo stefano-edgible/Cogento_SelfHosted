@@ -61,6 +61,7 @@ Copy `.env.example` to `.env` and set at least the following.
 **Optional (only if you use that feature)**
 
 - **Multi-tenant Stripe:** **`STRIPE_KEY_ENCRYPTION_KEY`** – Used to encrypt tenant Stripe keys in the DB. It must be a **Fernet** key (not a random typed string). Run `./generate-stripe-encryption-key.sh` to generate one, then add the printed line to `.env`.
+- **License trial key:** **`LICENSE_TRIAL_PUBLIC_KEY`** and **`LICENSE_TRIAL_PRIVATE_KEY`** – If set, every new tenant gets an auto-generated trial license (100 Stripe customers, 30 days). Generate with: `openssl genrsa -out trial_private.pem 2048` then `openssl rsa -in trial_private.pem -pubout -out trial_public.pem`; put the PEM contents in `.env`. See [Cogento docs](https://github.com/Edgible/Edgible_Public_Docs/blob/main/docs/Cogento/setup/GETTING_STARTED.md) (Step 2) or `Cogento/.env.example` for details.
 - **Cloudflare Turnstile:** **`TURNSTILE_SITE_KEY`** and **`TURNSTILE_SECRET_KEY`** – Only if you enable Turnstile in the app.
 
 **Not secrets (but useful)**
