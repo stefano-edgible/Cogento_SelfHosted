@@ -36,7 +36,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 **Optional: pgAdmin**
 
-On Linux, run `sudo ./setup-volumes.sh` first so Postgres (UID 999) and pgAdmin (UID 5050) data dirs have the correct ownership. Then:
+On Linux, run `sudo ./setup-volumes.sh` first so Postgres (UID 70) and pgAdmin (UID 5050) data dirs have the correct ownership. Then:
 
 ```bash
 ./start-with-pgadmin.sh
