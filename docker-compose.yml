@@ -5,7 +5,7 @@
 #
 # Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
 #
-# Data: Postgres uses a Docker named volume (no host path). pgAdmin and tenant data use COGENTO_DATA_ROOT.
+# Data: Postgres uses a Docker named volume. Access the app at http://host:3000 (UI). pgAdmin and tenant data use COGENTO_DATA_ROOT.
 
 name: cogento
 
@@ -62,7 +62,7 @@ services:
     ports:
       - "0.0.0.0:${PGADMIN_PORT:-5050}:80"
     volumes:
-      - ${COGENTO_DATA_ROOT:-.}/volumes/pgadmin/data:/var/lib/pgadmin
+      - cogento_pgadmin_data:/var/lib/pgadmin
       - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
     deploy:
       resources:
@@ -149,28 +149,9 @@ services:
       retries: 3
       start_period: 10s
 
-  nginx:
-    image: nginx:alpine
-    container_name: cogento-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_HTTP_PORT:-8080}:80"
-    volumes:
-      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      ui:
-        condition: service_healthy
-      api:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-    networks:
-      - cogento-network
-
 volumes:
   cogento_postgres_data:
+  cogento_pgadmin_data:
 
 networks:
   cogento-network:

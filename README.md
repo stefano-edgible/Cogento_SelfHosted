@@ -8,7 +8,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 **Suggested minimum hardware**
 
-- **RAM:** 2 GB minimum; **4 GB** recommended (Postgres, API, UI, nginx; optional pgAdmin).
+- **RAM:** 2 GB minimum; **4 GB** recommended (Postgres, API, UI; optional pgAdmin).
 - **Disk:** At least **5 GB** for images and **5–10 GB** for `volumes/` (Postgres, tenant data). Use a dedicated path (e.g. `/data`) and set `COGENTO_DATA_ROOT=/data` for production.
 - **CPU:** 2 cores.
 
@@ -28,15 +28,13 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 3. **Create volume dirs and start**
    ```bash
-   ./setup-volumes.sh          # on Linux, use sudo ./setup-volumes.sh if you use pgAdmin
+   ./setup-volumes.sh
    ./start.sh
    ```
 
-4. **Open the app** at **http://localhost:8080** (nginx) or **http://localhost:3000** (UI direct). The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
+4. **Open the app** at **http://localhost:3000**. The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
 
 **Optional: pgAdmin**
-
-On Linux, run `sudo ./setup-volumes.sh` first so the pgAdmin data dir has the correct ownership (UID 5050). Then:
 
 ```bash
 ./start-with-pgadmin.sh
@@ -73,13 +71,13 @@ Keep `.env` out of version control (it is in `.gitignore`).
 **Changing passwords after launch**
 
 - **PostgreSQL:** Yes. In pgAdmin: connect to the "Cogento PostgreSQL" server (use the password from your `.env`), right-click the **postgres** database → **Query Tool**, run `ALTER USER cogento PASSWORD 'your_new_password';`, then update `POSTGRES_PASSWORD` in `.env` to the same value and run `docker compose -p cogento restart api`.
-- **pgAdmin:** Yes. Either change your password from inside the pgAdmin web UI (login → right-click your user → Change Password), or set a new default by updating `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` in `.env`, removing the pgAdmin data volume (`rm -rf ./volumes/pgadmin/data`), running `sudo ./setup-volumes.sh` again, and starting with `./start-with-pgadmin.sh` (pgAdmin will re-initialize with the new credentials).
+- **pgAdmin:** Yes. Either change your password from inside the pgAdmin web UI (login → right-click your user → Change Password), or set a new default by updating `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` in `.env`, removing the pgAdmin volume (`docker volume rm cogento_cogento_pgadmin_data`), and running `./start-with-pgadmin.sh` again (pgAdmin will re-initialize with the new credentials).
 
 ## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `setup-volumes.sh` | Create volume directories (run once or when changing data root). On Linux, use `sudo ./setup-volumes.sh` if you use pgAdmin. |
+| `setup-volumes.sh` | Create volume directories for tenant data (run once or when changing data root). Postgres and pgAdmin use Docker named volumes. |
 | `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
@@ -88,15 +86,14 @@ Keep `.env` out of version control (it is in `.gitignore`).
 
 ## Ports
 
-- **8080** – nginx (default HTTP)
-- **3000** – UI (direct)
+- **3000** – UI (web app)
 - **8000** – API (direct)
 - **5432** – Postgres (host)
 - **5050** – pgAdmin (only when started with `start-with-pgadmin.sh`)
 
 ## Data
 
-Postgres data is stored in a **Docker named volume** (`cogento_postgres_data`), so no host path or permissions setup is needed. Other data (pgAdmin, tenant) is under `./volumes/` (or `COGENTO_DATA_ROOT` from `.env`). To put Postgres on a specific disk, see Docker docs for creating a volume with a custom path.
+Postgres and pgAdmin use **Docker named volumes** (`cogento_postgres_data`, `cogento_pgadmin_data`), so no host path or permissions setup is needed. Tenant data is under `./volumes/tenant` (or `COGENTO_DATA_ROOT` from `.env`).
 
 ## Images
 

@@ -6,4 +6,4 @@ cd "$SCRIPT_DIR"
 [ -f .env ] && set -a && source .env && set +a
 docker compose pull
 docker compose up -d
-echo "Cogento starting. Web: http://localhost:${NGINX_HTTP_PORT:-8080}  (UI direct: http://localhost:${UI_PORT:-3000})"
+echo "Cogento starting. Web: http://localhost:${UI_PORT:-3000}"
