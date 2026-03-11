@@ -9,8 +9,9 @@ ROOT="${COGENTO_DATA_ROOT:-.}"
 echo "Creating volumes under ${ROOT}/volumes/..."
 mkdir -p "${ROOT}/volumes/postgres/data"
 mkdir -p "${ROOT}/volumes/pgadmin/data/sessions"
+mkdir -p "${ROOT}/volumes/pgadmin/data/storage"
 mkdir -p "${ROOT}/volumes/tenant"
-# pgAdmin (dpage/pgadmin4) runs as user pgadmin (UID 5050) and needs to write to /var/lib/pgadmin/sessions
+# pgAdmin (dpage/pgadmin4) runs as user pgadmin (UID 5050) and needs to write to /var/lib/pgadmin (sessions, storage, etc.)
 if command -v chown &>/dev/null; then
   if chown -R 5050:5050 "${ROOT}/volumes/pgadmin/data" 2>/dev/null; then
     echo "pgAdmin data dir owned by 5050:5050."
