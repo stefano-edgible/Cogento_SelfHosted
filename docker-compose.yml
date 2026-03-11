@@ -1,7 +1,7 @@
 # Cogento Self-Hosted – run from pre-built registry images (no build)
 #
 # 1. Copy .env.example to .env and set GHCR_OWNER (and POSTGRES_PASSWORD, etc.).
-# 2. Run: ./setup-volumes.sh (sudo on Linux) && ./start.sh
+# 2. Run: sudo ./setup-volumes.sh && ./start.sh
 #
 # Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
 #
