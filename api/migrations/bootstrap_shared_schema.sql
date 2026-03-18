@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS tenants (
     database_name VARCHAR(255),        -- Name of the tenant database (e.g., cogento_kgtc)
     superadmin_email VARCHAR(255),     -- Email address of the superadmin user in the tenant database
     
+    -- License (trial/free/premium token; trial auto-set on create)
+    license_token TEXT,
+
     -- Audit fields
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
