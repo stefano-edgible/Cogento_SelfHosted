@@ -56,6 +56,9 @@ Copy `.env.example` to `.env` and set at least the following.
 
 **Should set for production or if using the feature**
 
+- **`SESSION_SECRET_KEY`** – Secret for signing session tokens (JWT). **Change the default in production**; use a long random string (e.g. `openssl rand -base64 32`). Set it to a **fixed value in `.env`** so that logins survive container restarts (otherwise you may need to sign in again after `docker compose restart`).
+- **`UNSUBSCRIBE_SECRET_KEY`** – Used for secure unsubscribe links in emails. **Change the default in production**.
+- **`CORS_ORIGINS`** – Comma-separated allowed origins (e.g. `https://cogento.example.com`). If unset, the API uses `UI_BASE_URL` only. Set when the UI is on a different origin or you have multiple frontends.
 - **`PGADMIN_EMAIL`** / **`PGADMIN_PASSWORD`** – Only if you start pgAdmin (`start-with-pgadmin.sh`). Defaults are weak; change them if pgAdmin is reachable.
 
 **Optional (only if you use that feature)**

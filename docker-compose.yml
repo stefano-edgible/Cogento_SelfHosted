@@ -107,6 +107,9 @@ services:
       PROGENTO_TECHNICAL_MODEL: ${PROGENTO_TECHNICAL_MODEL:-phi}
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      # Session: set SESSION_SECRET_KEY in .env to a fixed value so logins survive container restarts
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:-change-session-secret-in-production}
+      SESSION_TOKEN_EXPIRE_HOURS: ${SESSION_TOKEN_EXPIRE_HOURS:-168}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
