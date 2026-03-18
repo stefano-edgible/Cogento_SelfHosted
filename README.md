@@ -135,3 +135,4 @@ Images are pulled from **GitHub Container Registry** (`ghcr.io/<GHCR_OWNER>/coge
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for the full text.
+
