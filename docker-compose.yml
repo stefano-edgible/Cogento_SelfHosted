@@ -30,7 +30,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
       SHARED_SUPERUSER_EMAIL: ${SHARED_SUPERUSER_EMAIL:-}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5437}:5432"
     volumes:
       - ${COGENTO_DATA_ROOT:-.}/volumes/postgres:/var/lib/postgresql/data
       - ./scripts/db/postgres-entrypoint-wrapper.sh:/usr/local/bin/postgres-entrypoint-wrapper.sh:ro
@@ -67,7 +67,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-cogento}
       PGADMIN_SERVER_NAME: ${PGADMIN_SERVER_NAME:-PostgreSQL}
     ports:
-      - "0.0.0.0:${PGADMIN_PORT:-5050}:80"
+      - "0.0.0.0:${PGADMIN_PORT:-5057}:80"
     entrypoint: ["/pgadmin4/docker-entrypoint.sh"]
     volumes:
       - ${COGENTO_DATA_ROOT:-.}/volumes/pgadmin:/var/lib/pgadmin
@@ -105,7 +105,7 @@ services:
       MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SHARED_SUPERUSER_EMAIL: ${SHARED_SUPERUSER_EMAIL:-}
-      UI_BASE_URL: ${UI_BASE_URL:-http://localhost:3000}
+      UI_BASE_URL: ${UI_BASE_URL:-http://localhost:3007}
       PROGENTO_API_URL: ${PROGENTO_API_URL:-http://172.17.0.1:8001}
       PROGENTO_COGENTO_KB_REPO_ID: ${PROGENTO_COGENTO_KB_REPO_ID:-cogento}
       PROGENTO_HELP_CHAT_MODEL: ${PROGENTO_HELP_CHAT_MODEL:-phi}
@@ -129,7 +129,7 @@ services:
       LICENSE_TRIAL_PUBLIC_KEY: ${LICENSE_TRIAL_PUBLIC_KEY:-}
       LICENSE_TRIAL_PRIVATE_KEY: ${LICENSE_TRIAL_PRIVATE_KEY:-}
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${API_PORT:-8007}:8000"
     volumes:
       - ${COGENTO_DATA_ROOT:-.}/volumes/tenant:/volumes/tenant
       - ./imports:/app/imports
@@ -155,7 +155,7 @@ services:
     container_name: cogento-ui
     restart: unless-stopped
     ports:
-      - "${UI_PORT:-3000}:${UI_CONTAINER_PORT:-80}"
+      - "${UI_PORT:-3007}:${UI_CONTAINER_PORT:-80}"
     # No VITE_API_URL: UI uses relative /api; nginx (and UI container nginx) proxy /api to API. One image works for any host.
     deploy:
       resources:

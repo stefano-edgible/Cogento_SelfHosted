@@ -6,4 +6,4 @@ cd "$SCRIPT_DIR"
 [ -f .env ] && set -a && source .env && set +a
 docker compose pull
 docker compose --profile with-pgadmin up -d
-echo "Cogento starting (with pgAdmin). Web: http://localhost:${UI_PORT:-3000}  pgAdmin: http://localhost:${PGADMIN_PORT:-5050}"
+echo "Cogento starting (with pgAdmin). Web: http://localhost:${UI_PORT:-3007}  pgAdmin: http://localhost:${PGADMIN_PORT:-5057}"

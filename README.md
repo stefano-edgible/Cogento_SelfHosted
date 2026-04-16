@@ -34,13 +34,13 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
    ./start.sh
    ```
 
-4. **Open the app** at **http://localhost:3000**. The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
+4. **Open the app** at **http://localhost:3007**. The UI uses relative `/api` URLs, so it works on any host (e.g. your server IP or domain) without extra config.
 
 **Optional: pgAdmin**
 
 ```bash
 ./start-with-pgadmin.sh
-# Then open http://localhost:5050 (or PGADMIN_PORT from .env)
+# Then open http://localhost:5057 (or PGADMIN_PORT from .env)
 ```
 
 ## Secrets and keys
@@ -69,7 +69,7 @@ Copy `.env.example` to `.env` and set at least the following.
 
 **Not secrets (but useful)**
 
-- **`UI_BASE_URL`** – Base URL of the app (e.g. `https://cogento.example.com`) for links in emails. Default `http://localhost:3000`.
+- **`UI_BASE_URL`** – Base URL of the app (e.g. `https://cogento.example.com`) for links in emails. Default `http://localhost:3007`.
 - **`COGENTO_DATA_ROOT`** – Where to store volumes; use a dedicated path (e.g. `/data`) on a server.
 
 **Using an external mount (e.g. EC2 `/data`):** Set `COGENTO_DATA_ROOT=/data` in `.env`. Run `sudo ./setup-volumes.sh` from the repo (it creates `/data/volumes/postgres`, `pgadmin`, `tenant` and sets ownership). Then `./start.sh` as usual. Compose and the setup script both use the same variable, so everything stays under one path; no extra steps.
@@ -107,7 +107,7 @@ ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_
 |--------|-------------|
 | `setup-volumes.sh` | Create `volumes/postgres`, `volumes/pgadmin`, `volumes/tenant`. Run once or after a full reset. Run with `sudo` so containers can write. |
 | `scripts/db/add_shared_superuser.sh` | Add shared superuser to `cogento_shared.users` (e.g. if you started without `SHARED_SUPERUSER_EMAIL`). Run from repo root; stack must be up. |
-| `start.sh` | Start stack (Postgres, API, UI, nginx) in Docker |
+| `start.sh` | Start stack (Postgres, API, UI) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
 | `stop.sh` | Stop all Cogento containers |
 | `generate-stripe-encryption-key.sh` | Generate a Fernet key for `STRIPE_KEY_ENCRYPTION_KEY` (for multi-tenant Stripe). Add the printed line to `.env`. |
@@ -115,10 +115,12 @@ ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_
 
 ## Ports
 
-- **3000** – UI (web app)
-- **8000** – API (direct)
-- **5432** – Postgres (host)
-- **5050** – pgAdmin (only when started with `start-with-pgadmin.sh`)
+Default **host** ports end in **7** to reduce clashes with other stacks; override in `.env` if needed.
+
+- **3007** – UI (web app)
+- **8007** – API (direct)
+- **5437** – Postgres (host)
+- **5057** – pgAdmin (only when started with `start-with-pgadmin.sh`)
 
 ## Data
 
