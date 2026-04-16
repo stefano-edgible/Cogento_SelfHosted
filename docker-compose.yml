@@ -61,11 +61,19 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
       PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
+      # Writable path (image runs as uid 5050); entrypoint loads this file
+      PGADMIN_SERVER_JSON_FILE: /var/lib/pgadmin/servers.json
+      # Used to generate servers JSON (Username must match Postgres role)
+      POSTGRES_USER: ${POSTGRES_USER:-cogento}
+      PGADMIN_SERVER_NAME: ${PGADMIN_SERVER_NAME:-PostgreSQL}
     ports:
       - "0.0.0.0:${PGADMIN_PORT:-5050}:80"
+    entrypoint: ["/pgadmin4/docker-entrypoint.sh"]
     volumes:
       - ${COGENTO_DATA_ROOT:-.}/volumes/pgadmin:/var/lib/pgadmin
-      - ./config/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./config/pgadmin/servers-preset.json:/pgadmin4/servers-preset.json:ro
+      - ./scripts/pgadmin/docker-entrypoint.sh:/pgadmin4/docker-entrypoint.sh:ro
+      - ./scripts/pgadmin/render-servers.py:/pgadmin4/render-servers.py:ro
     deploy:
       resources:
         limits:

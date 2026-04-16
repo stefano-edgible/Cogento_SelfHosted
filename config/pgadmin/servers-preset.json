@@ -1,7 +1,7 @@
 {
   "Servers": {
     "1": {
-      "Name": "Cogento PostgreSQL",
+      "Name": "PostgreSQL",
       "Group": "Servers",
       "Host": "cogento-postgres",
       "Port": 5432,
