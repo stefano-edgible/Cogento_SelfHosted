@@ -43,6 +43,10 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 # Then open http://localhost:5057 (or PGADMIN_PORT from .env)
 ```
 
+## Tenant database migrations
+
+SQL for **existing** tenant databases (e.g. adding a column or extending a CHECK constraint) lives in this repo under **`api/migrations/`** alongside the main [Cogento](https://github.com/stefano-edgible/Cogento) tree. After pulling a new API image, apply any new scripts to **each** tenant DB with `psql` (see script headers). Example: **`add_systems_role_to_users.sql`** adds the `systems` integration role to `users.role`.
+
 ## Secrets and keys
 
 Copy `.env.example` to `.env` and set at least the following.
