@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS event_participants (
     joined_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     withdrew_at       TIMESTAMP WITH TIME ZONE,
 
+    slot_index        SMALLINT,
+
     metadata          JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -80,5 +82,12 @@ CREATE INDEX IF NOT EXISTS idx_event_participants_user_id  ON event_participants
 CREATE INDEX IF NOT EXISTS idx_event_participants_email    ON event_participants(email);
 CREATE INDEX IF NOT EXISTS idx_event_participants_status   ON event_participants(status);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_event_participants_event_slot_active
+ON event_participants (event_id, slot_index)
+WHERE slot_index IS NOT NULL AND status IN ('joined', 'confirmed');
+
+CREATE INDEX IF NOT EXISTS idx_event_participants_slot ON event_participants(event_id, slot_index);
+
 COMMENT ON TABLE event_participants IS 'Per-event RSVP rows; UNIQUE(event_id,email) means re-joining after withdraw flips status, not duplicates.';
+COMMENT ON COLUMN event_participants.slot_index IS '1..capacity roster slot for joined/confirmed; NULL for waitlisted.';
 COMMENT ON COLUMN event_participants.status IS 'joined|waitlisted|withdrawn|no_show|confirmed. Capacity hard cap on joined enforced at app layer (see MATCH_EVENTS_DESIGN.md §1.3).';
