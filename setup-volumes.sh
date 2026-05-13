@@ -20,4 +20,10 @@ if ! chown 5050:5050 "${ROOT}/volumes/pgadmin" 2>/dev/null; then
   exit 1
 fi
 chmod 777 "${ROOT}/volumes/postgres" "${ROOT}/volumes/pgadmin"
+
+# Tenant images / member avatars: API container creates per-tenant subdirs on demand.
+# Container runs as root, but Docker Desktop on macOS maps writes back to the host user,
+# so a root:755 host dir blocks the bind mount. 777 lets every tenant's images/ and
+# member-avatars/ subfolders be created on the fly. (On EC2 this is also harmless.)
+chmod 777 "${ROOT}/volumes/tenant"
 echo "Done."
