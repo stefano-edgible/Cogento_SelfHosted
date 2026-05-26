@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create volume directories under COGENTO_DATA_ROOT/volumes/ (postgres, pgadmin, tenant).
+# Create volume directories under COGENTO_DATA_ROOT/volumes/ (postgres, pgadmin, tenant, caddy).
 # Run once, or after a full reset (rm -rf volumes). Run with sudo so postgres (70) and pgadmin (5050) can write.
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,7 +7,12 @@ cd "$SCRIPT_DIR"
 [ -f .env ] && set -a && source .env && set +a
 ROOT="${COGENTO_DATA_ROOT:-.}"
 echo "Creating volumes under ${ROOT}/volumes/..."
-mkdir -p "${ROOT}/volumes/postgres" "${ROOT}/volumes/pgadmin" "${ROOT}/volumes/tenant"
+mkdir -p \
+  "${ROOT}/volumes/postgres" \
+  "${ROOT}/volumes/pgadmin" \
+  "${ROOT}/volumes/tenant" \
+  "${ROOT}/volumes/caddy/data" \
+  "${ROOT}/volumes/caddy/config"
 
 # Containers run as postgres (70:70) and pgadmin (5050:5050). chown so they can write on Linux.
 # On Docker Desktop (macOS) bind mounts often don't preserve UIDs; chmod 777 ensures the container can write.
@@ -26,4 +31,5 @@ chmod 777 "${ROOT}/volumes/postgres" "${ROOT}/volumes/pgadmin"
 # so a root:755 host dir blocks the bind mount. 777 lets every tenant's images/ and
 # member-avatars/ subfolders be created on the fly. (On EC2 this is also harmless.)
 chmod 777 "${ROOT}/volumes/tenant"
+chmod 777 "${ROOT}/volumes/caddy" "${ROOT}/volumes/caddy/data" "${ROOT}/volumes/caddy/config"
 echo "Done."

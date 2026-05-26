@@ -4,6 +4,7 @@
 # 2. Run: sudo ./setup-volumes.sh && ./start.sh
 #
 # Optional pgAdmin: ./start-with-pgadmin.sh  or  docker compose --profile with-pgadmin up -d
+# Optional Caddy proxy: ./start-with-proxy.sh or docker compose --profile with-proxy up -d
 #
 # Data: All under ${COGENTO_DATA_ROOT:-.}/volumes/ (postgres, pgadmin, tenant). One place to reset: stop, rm -rf volumes, ./setup-volumes.sh, ./start.sh
 
@@ -171,6 +172,27 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: cogento-proxy
+    restart: unless-stopped
+    environment:
+      # Default is HTTP-only local testing. For production set e.g. COGENTO_PROXY_SITE_ADDRESS=cogento.example.com.
+      COGENTO_PROXY_SITE_ADDRESS: ${COGENTO_PROXY_SITE_ADDRESS:-http://localhost}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${COGENTO_DATA_ROOT:-.}/volumes/caddy/data:/data
+      - ${COGENTO_DATA_ROOT:-.}/volumes/caddy/config:/config
+    depends_on:
+      - ui
+    networks:
+      - cogento-network
+    profiles:
+      - with-proxy
 
 networks:
   cogento-network:

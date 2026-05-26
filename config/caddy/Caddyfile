@@ -1,0 +1,10 @@
+# Cogento Self-Hosted optional reverse proxy.
+#
+# Default: HTTP-only local proxy at http://localhost.
+# Production: set COGENTO_PROXY_SITE_ADDRESS=cogento.example.com in .env and
+# point DNS at the host. Caddy will automatically obtain and renew TLS certs.
+
+{$COGENTO_PROXY_SITE_ADDRESS:http://localhost} {
+	encode zstd gzip
+	reverse_proxy ui:80
+}

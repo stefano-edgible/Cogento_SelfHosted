@@ -43,6 +43,30 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 # Then open http://localhost:5057 (or PGADMIN_PORT from .env)
 ```
 
+**Optional: built-in Caddy reverse proxy**
+
+For local HTTP proxy testing:
+
+```bash
+./start-with-proxy.sh
+# Then open http://localhost
+```
+
+For production HTTPS, set `COGENTO_PROXY_SITE_ADDRESS` and public URLs in `.env` first:
+
+```bash
+COGENTO_PROXY_SITE_ADDRESS=cogento.example.com
+UI_BASE_URL=https://cogento.example.com
+CORS_ORIGINS=https://cogento.example.com
+```
+
+Then run:
+
+```bash
+sudo ./setup-volumes.sh
+./start-with-proxy.sh
+```
+
 ## AWS EC2 production setup
 
 This repo is intentionally small: it runs Cogento from pre-built images with Docker Compose. On AWS, the main extra work is host preparation, persistent storage, network rules, DNS, and HTTPS.
@@ -131,17 +155,45 @@ sudo ./setup-volumes.sh
 
 Point your DNS record (for example `cogento.example.com`) at the EC2 public IP or Elastic IP.
 
-Use a reverse proxy on the host (for example Caddy, Nginx, or an AWS Application Load Balancer) to terminate TLS and forward traffic to the UI container on `localhost:3007`.
+This repo includes an optional **Caddy** reverse proxy profile so you do not need to install a host-level proxy for simple deployments. Set these in `.env`:
 
-Example Caddyfile:
+```bash
+COGENTO_PROXY_SITE_ADDRESS=cogento.example.com
+UI_BASE_URL=https://cogento.example.com
+CORS_ORIGINS=https://cogento.example.com
+COGENTO_DATA_ROOT=/data
+```
+
+Then start with:
+
+```bash
+sudo ./setup-volumes.sh
+./start-with-proxy.sh
+```
+
+The proxy service publishes ports **80** and **443**, forwards traffic to the UI container, and stores Caddy TLS data under `$COGENTO_DATA_ROOT/volumes/caddy/`.
+
+The included Caddyfile is:
 
 ```caddyfile
-cogento.example.com {
-  reverse_proxy 127.0.0.1:3007
+{$COGENTO_PROXY_SITE_ADDRESS:http://localhost} {
+  encode zstd gzip
+  reverse_proxy ui:80
 }
 ```
 
 Because the UI uses relative `/api` URLs and its container proxies `/api` to the API service, the reverse proxy only needs to forward to the UI port.
+
+If you prefer an AWS Application Load Balancer, Nginx, or a host-installed Caddy, keep using `./start.sh` and forward your external proxy to `localhost:3007` instead.
+
+**Recommended when using the built-in proxy:** keep direct service ports bound to localhost in `.env`, and keep only 80/443 open in the security group:
+
+```bash
+UI_PORT=127.0.0.1:3007
+API_PORT=127.0.0.1:8007
+POSTGRES_PORT=127.0.0.1:5437
+PGADMIN_PORT=127.0.0.1:5057
+```
 
 ### 7. Backups
 
@@ -245,6 +297,7 @@ ON CONFLICT (email) DO UPDATE SET role = 'superuser', is_active = TRUE, updated_
 | `scripts/db/add_shared_superuser.sh` | Add shared superuser to `cogento_shared.users` (e.g. if you started without `SHARED_SUPERUSER_EMAIL`). Run from repo root; stack must be up. |
 | `start.sh` | Start stack (Postgres, API, UI) in Docker |
 | `start-with-pgadmin.sh` | Start stack plus pgAdmin (profile `with-pgadmin`) |
+| `start-with-proxy.sh` | Start stack plus Caddy reverse proxy (profile `with-proxy`, ports 80/443) |
 | `stop.sh` | Stop all Cogento containers |
 | `generate-stripe-encryption-key.sh` | Generate a Fernet key for `STRIPE_KEY_ENCRYPTION_KEY` (for multi-tenant Stripe). Add the printed line to `.env`. |
 | `sync-from-cogento.sh` | **Maintainers:** copy config/migrations from the [Cogento](https://github.com/stefano-edgible/Cogento) repo (source of truth). Run when those files change in Cogento, then commit. Default source: `../Cogento`; override with `COGENTO_SOURCE=/path/to/Cogento`. |
@@ -257,10 +310,11 @@ Default **host** ports end in **7** to reduce clashes with other stacks; overrid
 - **8007** – API (direct)
 - **5437** – Postgres (host)
 - **5057** – pgAdmin (only when started with `start-with-pgadmin.sh`)
+- **80 / 443** – Caddy reverse proxy (only when started with `start-with-proxy.sh`)
 
 ## Data
 
-**All data lives under one directory:** `./volumes/` (or `COGENTO_DATA_ROOT/volumes/` if you set e.g. `COGENTO_DATA_ROOT=/data`). Subdirs: `postgres`, `pgadmin`, `tenant`. Run `./setup-volumes.sh` with `sudo` so the postgres (UID 70) and pgAdmin (UID 5050) containers can write to their dirs.
+**All data lives under one directory:** `./volumes/` (or `COGENTO_DATA_ROOT/volumes/` if you set e.g. `COGENTO_DATA_ROOT=/data`). Subdirs: `postgres`, `pgadmin`, `tenant`, and optionally `caddy` for TLS cert/config state. Run `./setup-volumes.sh` with `sudo` so the postgres (UID 70), pgAdmin (UID 5050), and optional proxy containers can write to their dirs.
 
 **Why use an external mount (e.g. `/data` on EC2)?** Putting data on a dedicated path (set `COGENTO_DATA_ROOT=/data` in `.env`) makes it easy to reinstall the OS or move to a different instance: keep or reattach the same volume, point `.env` at it, and run `sudo ./setup-volumes.sh` and `./start.sh` again. All state stays in one place and is independent of the repo or runtime install.
 
