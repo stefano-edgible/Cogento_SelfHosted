@@ -48,9 +48,20 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 For local HTTP proxy testing:
 
 ```bash
+sudo ./setup-volumes.sh
 ./start-with-proxy.sh
 # Then open http://localhost
 ```
+
+If you already had a working local Cogento install, you can keep the same existing `volumes/postgres`, `volumes/tenant`, and `volumes/pgadmin` data. The proxy only adds `volumes/caddy/` for Caddy state/cert storage; `sudo ./setup-volumes.sh` creates that directory without resetting your database.
+
+If port **80** is already in use on your machine, set a different local HTTP port in `.env`:
+
+```bash
+HTTP_PORT=8080
+```
+
+Then run `./start-with-proxy.sh` and open **http://localhost:8080**. On AWS production, use the default **80/443**.
 
 For production HTTPS, set `COGENTO_PROXY_SITE_ADDRESS` and public URLs in `.env` first:
 
