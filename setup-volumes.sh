@@ -7,6 +7,7 @@ cd "$SCRIPT_DIR"
 [ -f .env ] && set -a && source .env && set +a
 ROOT="${COGENTO_DATA_ROOT:-.}"
 echo "Creating volumes under ${ROOT}/volumes/..."
+mkdir -p "${ROOT}/volumes"
 mkdir -p \
   "${ROOT}/volumes/postgres" \
   "${ROOT}/volumes/pgadmin" \
@@ -24,7 +25,7 @@ if ! chown 5050:5050 "${ROOT}/volumes/pgadmin" 2>/dev/null; then
   echo "Could not chown volumes/pgadmin. Run: sudo ./setup-volumes.sh"
   exit 1
 fi
-chmod 777 "${ROOT}/volumes/postgres" "${ROOT}/volumes/pgadmin"
+chmod 777 "${ROOT}/volumes" "${ROOT}/volumes/postgres" "${ROOT}/volumes/pgadmin"
 
 # Tenant images / member avatars: API container creates per-tenant subdirs on demand.
 # Container runs as root, but Docker Desktop on macOS maps writes back to the host user,
