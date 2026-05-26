@@ -87,7 +87,7 @@ This repo is intentionally small: it runs Cogento from pre-built images with Doc
 Recommended starting point:
 
 - **Instance:** `t3.small` minimum, `t3.medium` recommended for production use.
-- **OS:** Ubuntu LTS or Amazon Linux 2023.
+- **OS:** Ubuntu LTS.
 - **Disk:** Use a dedicated EBS volume for data, mounted at `/data` (recommended), with regular EBS snapshots.
 - **Architecture:** The default image tag is `latest` for Linux/amd64 EC2 instances. Use ARM images only if you have built/published an ARM tag and set `COGENTO_IMAGE_TAG`.
 
@@ -108,14 +108,42 @@ Do **not** expose these publicly:
 
 Those ports may be useful locally on the host or through an SSH tunnel, but production users should access Cogento through HTTPS on port 443.
 
-### 3. Install Docker
+### 3. Install Docker on Ubuntu
 
-Install Docker Engine and the Compose plugin for your chosen OS, then verify:
+Install Docker Engine and the Compose plugin:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Allow your SSH user to run Docker without `sudo`:
+
+```bash
+sudo usermod -aG docker "$USER"
+newgrp docker
+```
+
+Then verify:
 
 ```bash
 docker --version
 docker compose version
 ```
+
+If `docker` still requires `sudo`, log out and reconnect to the instance.
 
 If the images are private in GitHub Container Registry, log in before `./start.sh`:
 
