@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS event_participants (
       CHECK (role IN ('player','organizer','umpire','spectator')),
 
     status            VARCHAR(30) NOT NULL DEFAULT 'joined'
-      CHECK (status IN ('joined','waitlisted','withdrawn','no_show','confirmed')),
+      CHECK (status IN ('joined','waitlisted','withdrawn','no_show','confirmed','reserved')),
 
     joined_at         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     withdrew_at       TIMESTAMP WITH TIME ZONE,
@@ -84,7 +84,7 @@ CREATE INDEX IF NOT EXISTS idx_event_participants_status   ON event_participants
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_event_participants_event_slot_active
 ON event_participants (event_id, slot_index)
-WHERE slot_index IS NOT NULL AND status IN ('joined', 'confirmed');
+WHERE slot_index IS NOT NULL AND status IN ('joined', 'confirmed', 'reserved');
 
 CREATE INDEX IF NOT EXISTS idx_event_participants_slot ON event_participants(event_id, slot_index);
 

@@ -6,7 +6,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 - **Docker** and **Docker Compose** (v2)
 
-**Platforms:** The same setup works on **Linux** (e.g. EC2) and **macOS** (Docker Desktop). On Linux, `sudo ./setup-volumes.sh` sets correct ownership for the bind-mounted data dirs; on macOS a postgres entrypoint wrapper fixes permissions inside the container. No platform-specific steps.
+**Platforms:** The same Docker Compose setup works on **Linux** (e.g. EC2) and **macOS** (Docker Desktop). On Linux, `sudo ./setup-volumes.sh` sets correct ownership for the bind-mounted data dirs; on macOS a postgres entrypoint wrapper fixes permissions inside the container. For production hosting, also review the AWS notes below.
 
 **Suggested minimum hardware**
 
@@ -30,7 +30,7 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 
 3. **Create volume dirs and start**
    ```bash
-   ./setup-volumes.sh          # run with sudo so postgres/pgAdmin can write (Linux and macOS)
+   sudo ./setup-volumes.sh     # so postgres/pgAdmin can write (Linux and macOS)
    ./start.sh
    ```
 
@@ -42,6 +42,138 @@ Run [Cogento](https://github.com/stefano-edgible/Cogento) by pulling pre-built i
 ./start-with-pgadmin.sh
 # Then open http://localhost:5057 (or PGADMIN_PORT from .env)
 ```
+
+## AWS EC2 production setup
+
+This repo is intentionally small: it runs Cogento from pre-built images with Docker Compose. On AWS, the main extra work is host preparation, persistent storage, network rules, DNS, and HTTPS.
+
+### 1. Launch an EC2 host
+
+Recommended starting point:
+
+- **Instance:** `t3.small` minimum, `t3.medium` recommended for production use.
+- **OS:** Ubuntu LTS or Amazon Linux 2023.
+- **Disk:** Use a dedicated EBS volume for data, mounted at `/data` (recommended), with regular EBS snapshots.
+- **Architecture:** The default image tag is `latest` for Linux/amd64 EC2 instances. Use ARM images only if you have built/published an ARM tag and set `COGENTO_IMAGE_TAG`.
+
+### 2. Security group
+
+For a normal public deployment, allow inbound:
+
+- **22/tcp** from your admin IP only (SSH).
+- **80/tcp** from the internet (HTTP challenge / redirect).
+- **443/tcp** from the internet (HTTPS app traffic).
+
+Do **not** expose these publicly:
+
+- **3007** UI direct port
+- **8007** API direct port
+- **5437** Postgres
+- **5057** pgAdmin
+
+Those ports may be useful locally on the host or through an SSH tunnel, but production users should access Cogento through HTTPS on port 443.
+
+### 3. Install Docker
+
+Install Docker Engine and the Compose plugin for your chosen OS, then verify:
+
+```bash
+docker --version
+docker compose version
+```
+
+If the images are private in GitHub Container Registry, log in before `./start.sh`:
+
+```bash
+echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
+```
+
+The token needs package read access for the image owner set in `GHCR_OWNER`.
+
+### 4. Mount persistent data at `/data`
+
+Attach and mount an EBS volume at `/data`, then ensure it is mounted on boot via `/etc/fstab`. After that, set:
+
+```bash
+COGENTO_DATA_ROOT=/data
+```
+
+in `.env`. All Postgres, pgAdmin, and tenant files will live under `/data/volumes/`.
+
+### 5. Clone and configure
+
+```bash
+git clone https://github.com/stefano-edgible/Cogento_SelfHosted.git
+cd Cogento_SelfHosted
+cp .env.example .env
+```
+
+Edit `.env` before first start. At minimum for production:
+
+- `POSTGRES_PASSWORD`
+- `GHCR_OWNER`
+- `SHARED_SUPERUSER_EMAIL`
+- SMTP settings or `RESEND_API_KEY`
+- `SESSION_SECRET_KEY`
+- `UNSUBSCRIBE_SECRET_KEY`
+- `UI_BASE_URL=https://your.domain.example`
+- `CORS_ORIGINS=https://your.domain.example`
+- `COGENTO_DATA_ROOT=/data`
+
+Then initialize volumes and start:
+
+```bash
+sudo ./setup-volumes.sh
+./start.sh
+```
+
+### 6. DNS and HTTPS
+
+Point your DNS record (for example `cogento.example.com`) at the EC2 public IP or Elastic IP.
+
+Use a reverse proxy on the host (for example Caddy, Nginx, or an AWS Application Load Balancer) to terminate TLS and forward traffic to the UI container on `localhost:3007`.
+
+Example Caddyfile:
+
+```caddyfile
+cogento.example.com {
+  reverse_proxy 127.0.0.1:3007
+}
+```
+
+Because the UI uses relative `/api` URLs and its container proxies `/api` to the API service, the reverse proxy only needs to forward to the UI port.
+
+### 7. Backups
+
+At minimum, snapshot the EBS volume mounted at `/data`. For safer database backups, also run regular `pg_dump` exports from the Postgres container and store them outside the instance.
+
+Suggested backup targets:
+
+- EBS snapshots for fast whole-volume recovery.
+- S3 for exported database dumps.
+- A tested restore process on a fresh instance.
+
+### 8. Updating
+
+From the repo:
+
+```bash
+git pull
+docker compose pull
+docker compose up -d
+```
+
+After pulling a new API image, check `api/migrations/` and apply any new tenant migration SQL to each existing tenant database as described in the migrations section below.
+
+### 9. Recovery on a new EC2 instance
+
+To move or recover:
+
+1. Attach the existing EBS data volume to the new instance and mount it at `/data`.
+2. Clone this repo.
+3. Restore the same `.env` values, especially `POSTGRES_PASSWORD`, `SESSION_SECRET_KEY`, and `COGENTO_DATA_ROOT=/data`.
+4. Run `sudo ./setup-volumes.sh`.
+5. Run `./start.sh`.
 
 ## Tenant database migrations
 
